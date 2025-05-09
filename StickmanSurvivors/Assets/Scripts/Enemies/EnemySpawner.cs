@@ -14,6 +14,10 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Jeśli chcesz użyć innej kamery niż Camera.main, przeciągnij ją tutaj")]
     public Camera spawnCamera;
 
+    [Header("Spawn Containers")]
+    [Tooltip("Rodzic, pod którym będą tworzone wszystkie wrogie jednostki")]
+    public Transform enemiesContainer;   // <-- drag your "Enemies" GameObject here
+
     [Header("Spawn Settings")]
     [Tooltip("Dodatkowy margines poza krawędzią ekranu (w jednostkach world)")]
     public float offscreenMargin = 1f;
@@ -32,7 +36,6 @@ public class EnemySpawner : MonoBehaviour
         if (boundsCollider == null)
             boundsCollider = GetComponent<CompositeCollider2D>();
 
-        // Cache granice mapy
         Bounds mb = boundsCollider.bounds;
         mapMin = mb.min;
         mapMax = mb.max;
@@ -43,7 +46,6 @@ public class EnemySpawner : MonoBehaviour
         elapsedTime += Time.deltaTime;
         timer += Time.deltaTime;
 
-        // ile spawnów/s w tej chwili?
         float rate = spawnRateCurve.Evaluate(elapsedTime);
         float interval = (rate > 0f) ? (1f / rate) : float.MaxValue;
 
@@ -58,15 +60,12 @@ public class EnemySpawner : MonoBehaviour
     {
         if (enemyPrefabs == null || enemyPrefabs.Count == 0) return;
 
-        // Wybór losowego prefab'a
         GameObject prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Count)];
         if (!prefab) return;
 
-        // Ustal bieżącą “kamerę spawnu”
         Camera cam = spawnCamera != null ? spawnCamera : Camera.main;
         if (cam == null) return;
 
-        // Oblicz granice widoku kamery w world-space
         float halfH = cam.orthographicSize;
         float halfW = halfH * cam.aspect;
         Vector3 cpos = cam.transform.position;
@@ -76,61 +75,32 @@ public class EnemySpawner : MonoBehaviour
         float camMinY = cpos.y - halfH - offscreenMargin;
         float camMaxY = cpos.y + halfH + offscreenMargin;
 
-        // Zdefiniuj 4 strefy spawnu: lewa, prawa, dolna, górna
-        // (tylko tam, gdzie mają sens w obrębie mapy)
         var zones = new List<Rect>();
-
-        // lewa
         if (mapMin.x < camMinX)
-            zones.Add(new Rect(
-                mapMin.x,
-                mapMin.y,
-                camMinX - mapMin.x,
-                mapMax.y - mapMin.y));
-
-        // prawa
+            zones.Add(new Rect(mapMin.x, mapMin.y, camMinX - mapMin.x, mapMax.y - mapMin.y));
         if (mapMax.x > camMaxX)
-            zones.Add(new Rect(
-                camMaxX,
-                mapMin.y,
-                mapMax.x - camMaxX,
-                mapMax.y - mapMin.y));
-
-        // dół
+            zones.Add(new Rect(camMaxX, mapMin.y, mapMax.x - camMaxX, mapMax.y - mapMin.y));
         if (mapMin.y < camMinY)
-            zones.Add(new Rect(
-                Mathf.Max(mapMin.x, camMinX),
-                mapMin.y,
-                Mathf.Min(mapMax.x, camMaxX) - Mathf.Max(mapMin.x, camMinX),
-                camMinY - mapMin.y));
-
-        // góra
+            zones.Add(new Rect(Mathf.Max(mapMin.x, camMinX), mapMin.y, Mathf.Min(mapMax.x, camMaxX) - Mathf.Max(mapMin.x, camMinX), camMinY - mapMin.y));
         if (mapMax.y > camMaxY)
-            zones.Add(new Rect(
-                Mathf.Max(mapMin.x, camMinX),
-                camMaxY,
-                Mathf.Min(mapMax.x, camMaxX) - Mathf.Max(mapMin.x, camMinX),
-                mapMax.y - camMaxY));
-
+            zones.Add(new Rect(Mathf.Max(mapMin.x, camMinX), camMaxY, Mathf.Min(mapMax.x, camMaxX) - Mathf.Max(mapMin.x, camMinX), mapMax.y - camMaxY));
         if (zones.Count == 0) return;
 
-        // wybierz losową strefę, a w niej losową pozycję
         Rect zone = zones[Random.Range(0, zones.Count)];
         float x = Random.Range(zone.xMin, zone.xMax);
         float y = Random.Range(zone.yMin, zone.yMax);
-
         Vector3 spawnPos = new Vector3(x, y, 0f);
-        Instantiate(prefab, spawnPos, Quaternion.identity);
+
+        // Instantiate under the Enemies container
+        Instantiate(prefab, spawnPos, Quaternion.identity, enemiesContainer);
     }
 
-    // dla wizualnego debugu w edytorze
     void OnDrawGizmosSelected()
     {
         if (boundsCollider != null)
         {
             Gizmos.color = Color.magenta;
-            Gizmos.DrawWireCube(boundsCollider.bounds.center,
-                                boundsCollider.bounds.size);
+            Gizmos.DrawWireCube(boundsCollider.bounds.center, boundsCollider.bounds.size);
         }
         Camera cam = spawnCamera != null ? spawnCamera : Camera.main;
         if (cam != null)

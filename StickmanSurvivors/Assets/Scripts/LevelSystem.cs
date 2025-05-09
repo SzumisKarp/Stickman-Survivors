@@ -28,6 +28,8 @@ public class LevelSystem : MonoBehaviour
             expToNext = Mathf.RoundToInt(expToNext * 1.5f); // Example scaling
             Debug.Log($"Level Up! Now level {level}");
             // TODO: Trigger level-up UI, upgrades, etc.
+            if (UpgradeChoiceUI.Instance != null)
+                UpgradeChoiceUI.Instance.ShowUpgradeChoices();
         }
     }
 }
