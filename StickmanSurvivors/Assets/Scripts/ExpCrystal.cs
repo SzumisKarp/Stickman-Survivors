@@ -12,4 +12,11 @@ public class ExpCrystal : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    public void CollectViaMagnet()
+    {
+        LevelSystem.Instance.AddExp(expValue);
+        Destroy(gameObject);
+    }
+
 }

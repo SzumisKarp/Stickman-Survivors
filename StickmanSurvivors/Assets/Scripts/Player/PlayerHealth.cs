@@ -12,8 +12,18 @@ public class PlayerHealth : MonoBehaviour
     public UnityEvent onDamaged;
     public UnityEvent onDied;
 
+    public static PlayerHealth Instance { get; private set; }
     void Awake()
     {
+        // singleton pattern
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
+        // original initialization
         currentHP = maxHP;
     }
     public void TakeDamage(int amount)
@@ -25,6 +35,13 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHP <= 0)
             Die();
+    }
+    public void Heal(int amount)
+    {
+        // clamp to maxHP
+        currentHP = Mathf.Min(currentHP + amount, maxHP);
+        Debug.Log($"[PlayerHealth] Healed to {currentHP}/{maxHP}");
+        // optionally invoke a onHealed UnityEvent here if you want UI feedback
     }
 
     void Die()

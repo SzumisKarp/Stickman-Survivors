@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class LevelSystem : MonoBehaviour
 {
@@ -7,6 +7,8 @@ public class LevelSystem : MonoBehaviour
     public int level = 1;
     public int exp = 0;
     public int expToNext = 10;
+
+    private int extraExpThisPickup = 0;
 
     void Awake()
     {
@@ -18,9 +20,17 @@ public class LevelSystem : MonoBehaviour
         Instance = this;
     }
 
+    public void AddExpBonus(int bonus)
+    {
+        extraExpThisPickup = bonus;
+    }
     public void AddExp(int amount)
     {
-        exp += amount;
+        int bonus = extraExpThisPickup;
+        int total = amount + bonus;
+        Debug.Log($"[EXP] base={amount}, bonus={bonus}, total={total}");
+        extraExpThisPickup = 0;
+        exp += total;
         while (exp >= expToNext)
         {
             exp -= expToNext;

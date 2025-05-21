@@ -58,35 +58,39 @@ public class OrbController : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius, enemyLayer);
         foreach (var h in hits)
         {
-            // compute direction once
             Vector2 dir = (h.transform.position - transform.position).normalized;
 
-            // if it's a Wolf, use its ApplyKnockback
-            var wolf = h.GetComponent<Wolf>();
-            if (wolf != null)
+            // 1) jeœli to Wolf:
+            if (h.TryGetComponent<Wolf>(out var wolf))
             {
                 wolf.ApplyKnockback(dir, explosionForce);
             }
-            else
+            // 2) jeœli to Snake:
+            else if (h.TryGetComponent<Snake>(out var snake))
             {
-                // fallback for any other Rigidbody-driven enemy
-                var rb = h.GetComponent<Rigidbody2D>();
-                if (rb != null)
-                    rb.AddForce(dir * explosionForce, ForceMode2D.Impulse);
+                snake.ApplyKnockback(dir, explosionForce);
+            }
+            // 3) jeœli to EventWolf:
+            else if (h.TryGetComponent<EventWolf>(out var eventWolf))
+            {
+                eventWolf.ApplyKnockback(dir, explosionForce);
+            }
+            // 4) fallback dla innych Enemy bez ApplyKnockback:
+            else if (h.TryGetComponent<Rigidbody2D>(out var targetRb))
+            {
+                targetRb.AddForce(dir * explosionForce, ForceMode2D.Impulse);
             }
 
-            // then deal damage
-            var e = h.GetComponent<Enemy>();
-            if (e != null)
+            // zadajemy damage ka¿demu Enemy
+            if (h.TryGetComponent<Enemy>(out var e))
                 e.TakeDamage(_damage);
         }
 
-        // hide & respawn as before
+        // hide & respawn jak wczeœniej…
         _sr.enabled = false;
         _col.enabled = false;
         StartCoroutine(Respawn());
     }
-
 
     private IEnumerator Respawn()
     {

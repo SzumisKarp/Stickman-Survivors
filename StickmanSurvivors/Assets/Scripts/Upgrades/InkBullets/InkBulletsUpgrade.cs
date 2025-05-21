@@ -68,11 +68,15 @@ public class InkBulletsUpgrade : MonoBehaviour
     {
         if (!splatterPrefab || !player) return;
 
+        // utworzenie + przypięcie do obiektu z tym skryptem
         GameObject s = Instantiate(splatterPrefab,
                                    player.position,
-                                   Quaternion.identity);
+                                   Quaternion.identity,
+                                   transform);        // <-- NEW
+
         var ctrl = s.GetComponent<InkSplatter>();
         ctrl.Initialize(dps[currentLevel - 1],
                         groundTime[currentLevel - 1]);
     }
+
 }

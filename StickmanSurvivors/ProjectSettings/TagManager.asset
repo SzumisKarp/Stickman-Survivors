@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - EXP
+  - Coin
+  - Chest
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -13,8 +16,8 @@ TagManager:
   - Water
   - UI
   - Projectile
-  - 
-  - 
+  - Pickup
+  - Ground
   - 
   - 
   - 
